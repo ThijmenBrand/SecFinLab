@@ -11,6 +11,6 @@ export const parseSarif = (text: string) => {
     }
     return { parsed: json, findingsCount: findings };
   } catch {
-    throw new Error("Invalid JSON/SARIF");
+    return { parsed: "Invalid JSON/SARIF", findingsCount: 0 };
   }
 };

@@ -1,16 +1,19 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 // ...existing code...
 import { useState } from "react";
 import { getVulnerability } from "../lib/getVulnerability";
-import type { UploadedSarif } from "../lib/types/sarifUpload";
 import type { DuplicateType } from "../lib/types/duplicate";
+import { exportGroundTruth, exportJsonFile } from "../lib/duplicatesExport";
+import { StoreToCache } from "../lib/cache";
+import type { UploadedSarif } from "../lib/types/uploadTypes";
+
+const GROUND_TRUTH_STORAGE_KEY = "secfinlab.duplicateGroundTruth.v1";
 
 interface LabelerProps {
   files: UploadedSarif[];
 }
 
 export default function Labeler({ files }: LabelerProps) {
-  const [currentComparisonIndex, setCurrentComparisonIndex] = useState(0);
+  const [currentComparisonIndex] = useState(0);
   const [currentComparisonVulnIndex, setCurrentComparisonVulnIndex] =
     useState(0);
   const [currentSourceVulnIndex, setCurrentSourceVulnIndex] = useState(0);
@@ -73,9 +76,37 @@ export default function Labeler({ files }: LabelerProps) {
     );
   };
 
+  const exportTruth = async () => {
+    const data = exportGroundTruth(duplicates, files);
+    exportJsonFile("ground_truth.json", data);
+    try {
+      await StoreToCache(GROUND_TRUTH_STORAGE_KEY, data);
+    } catch (err) {
+      console.warn("Error storing ground truth to cache:", err);
+    }
+  };
+
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <h2 className="text-2xl font-semibold mb-4">Duplicate Labeler</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-semibold mb-4">Duplicate Labeler</h2>
+        <span>
+          <button
+            className="bg-red-500 hover:bg-red-300 text-white py-1 px-3 rounded mb-4 cursor-pointer"
+            onClick={() => setDuplicates([])}
+          >
+            Clear All Duplicates
+          </button>
+          <button
+            className="bg-green-500 hover:bg-green-300 text-white py-1 px-3 rounded mb-4 ml-2 cursor-pointer"
+            onClick={() => {
+              exportTruth();
+            }}
+          >
+            Export ground truth
+          </button>
+        </span>
+      </div>
 
       <div className="mb-4">
         <div>

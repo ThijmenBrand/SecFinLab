@@ -1,5 +1,6 @@
 import { NavLink, Route, Routes } from "react-router-dom";
 import DuplicateLabeler from "./DuplicateLabeler";
+import DeduplicationEvaluator from "./DeduplicationEvaluator";
 
 function App() {
   return (
@@ -17,6 +18,14 @@ function App() {
                 >
                   Duplicate Labeler
                 </NavLink>
+                <NavLink
+                  to="/dedup-evaluate"
+                  className={({ isActive }) =>
+                    isActive ? "text-blue-600 font-semibold" : "text-gray-700"
+                  }
+                >
+                  Deduplication Evaluator
+                </NavLink>
               </div>
             </div>
           </div>
@@ -25,6 +34,10 @@ function App() {
         <main className="p-8 flex flex-col items-center justify-center">
           <Routes>
             <Route path="/duplicate" element={<DuplicateLabeler />} />
+            <Route
+              path="/dedup-evaluate"
+              element={<DeduplicationEvaluator />}
+            />
           </Routes>
         </main>
       </div>

@@ -1,10 +1,11 @@
 // ...existing code...
 import { useCallback, useEffect, useState } from "react";
 import FileUploadBox from "./components/FileUploadBox";
-import type { UploadedSarif } from "./lib/types/sarifUpload";
 import UploadedFilesList from "./components/UploadedFilesList";
-import { ClearCache, LoadFromCache, StoreToCache } from "./lib/cache";
+import { ClearCache, LoadFromCache, persist } from "./lib/cache";
 import Labeler from "./components/Labeler";
+import type { UploadedSarif } from "./lib/types/uploadTypes";
+import { parseSarif } from "./lib/parsers/parseSarif";
 
 const STORAGE_KEY = "secfinlab.sarifFiles.v1";
 
@@ -38,18 +39,11 @@ export default function DuplicateLabeler() {
     };
   }, []);
 
-  const persist = async (next: UploadedSarif[]) => {
-    try {
-      await StoreToCache(STORAGE_KEY, next);
-    } catch (err) {
-      console.warn("Error storing data to cache:", err);
-    }
-  };
-
   const removeFile = (id: string) => {
     setFiles((prev) => {
+      stopLabeling();
       const updated = prev.filter((f) => f.id !== id);
-      void persist(updated);
+      void persist(STORAGE_KEY, updated);
       return updated;
     });
   };
@@ -65,8 +59,29 @@ export default function DuplicateLabeler() {
 
   const onFilesUploaded = useCallback((newFiles: UploadedSarif[]) => {
     setFiles((prev) => {
-      const next = [...prev, ...newFiles];
-      void persist(next);
+      const parsedItems: UploadedSarif[] = newFiles.map((file) => {
+        if (file.error) {
+          return {
+            id: file.id,
+            name: file.name,
+            size: file.size,
+            error: file.error,
+          };
+        }
+
+        const { parsed, findingsCount } = parseSarif(file.text || "");
+        return {
+          id: file.id,
+          name: file.name,
+          size: file.size,
+          text: file.text,
+          parsed,
+          findingsCount,
+        };
+      });
+
+      const next = [...prev, ...parsedItems];
+      void persist(STORAGE_KEY, next);
       return next;
     });
   }, []);
