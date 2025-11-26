@@ -41,7 +41,8 @@ export function exportGroundTruth(
           (f) =>
             f.vulnPath === finding.vulnPath &&
             f.vulnLine === finding.vulnLine &&
-            f.vulnName === finding.vulnName
+            f.vulnName === finding.vulnName &&
+            f.ruleId === finding.ruleId
         )
       );
       if (!isInDuplicates) {

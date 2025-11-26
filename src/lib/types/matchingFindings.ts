@@ -6,3 +6,10 @@ export type FindingInMatchingFile = {
   findingIndex: number;
   finding: Finding;
 };
+
+export type FindingInMatchingCVE = {
+  fileId: string;
+  findingIndex: number;
+  cveId: string;
+  finding: Finding;
+};

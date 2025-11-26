@@ -25,7 +25,6 @@ export default function DeduplicationEvaluator() {
 
   const onFilesUploaded = useCallback((file: UploadedFileRaw) => {
     const aspmFile = parseAspmResults(file.name, file.text!);
-    console.log("Parsed ASPM Result:", aspmFile);
     setAspmFile(aspmFile);
     persist(ASPM_RESULT_STORAGE_KEY, aspmFile);
   }, []);

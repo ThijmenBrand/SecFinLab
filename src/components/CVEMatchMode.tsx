@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { DuplicateType } from "../lib/types/duplicate";
 import type { UploadedSarif } from "../lib/types/uploadTypes";
-import type { FindingInMatchingFile } from "../lib/types/matchingFindings";
+import type { FindingInMatchingCVE } from "../lib/types/matchingFindings";
 
 interface FileMatchModeProps {
   files: UploadedSarif[];
@@ -27,16 +27,17 @@ export default function FileMatchMode({
   removeDuplicate,
 }: FileMatchModeProps) {
   // Create a multi-dimensional array. The first dimension represents each file, the seond dimension contains findings that have matching files in other uploads.
-  const findingsWithMatchingFiles: FindingInMatchingFile[][] = useMemo(() => {
+  const findingsWithMatchingCVEs: FindingInMatchingCVE[][] = useMemo(() => {
     if (!files || files.length === 0 || !Array.isArray(files[0].parsed)) {
       return [];
     }
+
     return (
       files[0].parsed?.map((finding, idx) => {
-        const matchingFindings: FindingInMatchingFile[] = [
+        const matchingFindings: FindingInMatchingCVE[] = [
           {
             fileId: files[0].id,
-            fileName: files[0].name,
+            cveId: finding.ruleId,
             findingIndex: idx,
             finding: finding,
           },
@@ -46,17 +47,17 @@ export default function FileMatchMode({
         for (let i = 1; i < files.length; i++) {
           const otherFile = files[i];
           const match = otherFile.parsed?.find((otherFinding) => {
-            // remove slashes at the start for better matching
+            //  remove anything but the CVE ID for better matching. cve is constructed of CVE-XXXX-XXXX, and the last part can be variable in length
             return (
-              otherFinding.vulnPath.replace(/^\/+/, "") ===
-              finding.vulnPath.replace(/^\/+/, "")
+              otherFinding.ruleId.match(/CVE-\d{4}-\d+/)?.[0] ===
+              finding.ruleId.match(/CVE-\d{4}-\d+/)?.[0]
             );
           });
 
           if (match) {
             matchingFindings.push({
               fileId: files[i].id,
-              fileName: files[i].name,
+              cveId: match.ruleId,
               findingIndex: otherFile.parsed!.indexOf(match),
               finding: match,
             });
@@ -87,7 +88,7 @@ export default function FileMatchMode({
     <div>
       <h2 className="text-xl font-bold mb-4">File Match Mode</h2>
       <div className="space-y-6">
-        {findingsWithMatchingFiles.map((matchingFindings, index) => (
+        {findingsWithMatchingCVEs.map((matchingFindings, index) => (
           <div key={index} className="shadow bg-gray-100 p-3">
             <span>
               <p>File: {matchingFindings[0].finding.vulnPath}</p>
@@ -95,17 +96,10 @@ export default function FileMatchMode({
             <div className="grid grid-cols-2 md:grid-cols-2 gap-4 mt-4">
               <div>
                 <p>
-                  origin file:
+                  origin CVE:
                   <span className="font-bold">
                     {" "}
-                    {matchingFindings[0].fileName}
-                  </span>
-                </p>
-                <p>
-                  RuleId
-                  <span className="font-bold">
-                    {" "}
-                    {matchingFindings[0].finding.ruleId}
+                    {matchingFindings[0].cveId}
                   </span>
                 </p>
                 <p className="mt-4">{matchingFindings[0].finding.vulnName}</p>
@@ -119,17 +113,10 @@ export default function FileMatchMode({
               ) : (
                 <div>
                   <p>
-                    origin file:
+                    origin CVE:
                     <span className="font-bold">
                       {" "}
-                      {matchingFindings[1].fileName}
-                    </span>
-                  </p>
-                  <p>
-                    RuleId
-                    <span className="font-bold">
-                      {" "}
-                      {matchingFindings[1].finding.ruleId}
+                      {matchingFindings[1].cveId}
                     </span>
                   </p>
                   <p className="mt-4">{matchingFindings[1].finding.vulnName}</p>

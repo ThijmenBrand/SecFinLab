@@ -6,6 +6,7 @@ import { StoreToCache } from "../lib/cache";
 import type { UploadedSarif } from "../lib/types/uploadTypes";
 import VulnMatchMode from "./VulnMatchMode";
 import FileMatchMode from "./FileMatchMode";
+import CVEMatchMode from "./CVEMatchMode";
 
 const GROUND_TRUTH_STORAGE_KEY = "secfinlab.duplicateGroundTruth.v1";
 const RAW_GROUND_TRUTH_STORAGE_KEY = "secfinlab.duplicateRawGroundTruth.v1";
@@ -17,7 +18,7 @@ interface LabelerProps {
 
 export default function Labeler({ filesIn, duplicatesIn = [] }: LabelerProps) {
   const [duplicates, setDuplicates] = useState<DuplicateType[]>(duplicatesIn);
-  const [labelMode, setLabelMode] = useState<"vuln" | "file">("vuln");
+  const [labelMode, setLabelMode] = useState<"vuln" | "file" | "cve">("vuln");
 
   const markDuplicate = (
     sourceFileId: string,
@@ -142,16 +143,35 @@ export default function Labeler({ filesIn, duplicatesIn = [] }: LabelerProps) {
         >
           File Match Mode
         </button>
+        <button
+          className={`py-1 px-3 rounded mb-4 mr-2 cursor-pointer ${
+            labelMode === "cve"
+              ? "bg-blue-500 hover:bg-blue-300 text-white"
+              : "bg-gray-200 hover:bg-gray-300 text-gray-800"
+          }`}
+          onClick={() => setLabelMode("cve")}
+        >
+          CVE Match Mode
+        </button>
       </div>
-      {labelMode === "file" ? (
-        <FileMatchMode
+      {labelMode === "vuln" && (
+        <VulnMatchMode
           files={files}
-          duplicatesIn={duplicates}
+          duplicates={duplicates}
           markDuplicate={markDuplicate}
           removeDuplicate={removeDuplicate}
         />
-      ) : (
-        <VulnMatchMode
+      )}
+      {labelMode === "file" && (
+        <FileMatchMode
+          files={files}
+          duplicates={duplicates}
+          markDuplicate={markDuplicate}
+          removeDuplicate={removeDuplicate}
+        />
+      )}
+      {labelMode === "cve" && (
+        <CVEMatchMode
           files={files}
           duplicates={duplicates}
           markDuplicate={markDuplicate}

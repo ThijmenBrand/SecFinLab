@@ -25,9 +25,7 @@ export const truePositives = (
     for (const gtFinding of duplicateGroup) {
       const index = aspmFindings.findIndex(
         (aspmFinding, idx) =>
-          aspmFinding.vulnPath === gtFinding.vulnPath &&
-          aspmFinding.vulnName === gtFinding.vulnName &&
-          !usedIndices.has(idx) // ensure this finding hasn't been used yet
+          aspmFinding.vulnName == gtFinding.ruleId && !usedIndices.has(idx) // ensure this finding hasn't been used yet
       );
 
       if (index > -1) {
@@ -60,11 +58,11 @@ export const falsePositives = (
 
   // Go over each generic finding in the ground truth
   for (const gtFinding of gtGenericFindings) {
-    const found = aspmFindings.some(
-      (aspmFinding) =>
-        aspmFinding.vulnPath === gtFinding.vulnPath &&
-        aspmFinding.vulnName === gtFinding.vulnName
-    );
+    const found = aspmFindings.some((aspmFinding) => {
+      return (
+        aspmFinding.vulnName === gtFinding.ruleId.match(/CVE-\d{4}-\d+/)?.[0]
+      );
+    });
 
     // If the generic finding is not found in the ASPM results, it means it was marked as duplicate incorrectly
     if (!found) {
@@ -77,8 +75,8 @@ export const falsePositives = (
 
 /**
  * False negatives. These are duplicate findings that were not marked as duplicates in the ASPM results.
- * These findings exists in the ground truth under the "duplicates" field.
- * If more than one finding from a duplicate group exists in the ASPM results, it counts as a false negative.
+ * These findings exist in the ground truth under the "duplicates" field. and must exist only once in the ASPM results.
+ * If more then one finding from a duplicate group exists in the ASPM results, it counts as a false negative.
  **/
 export const falseNegatives = (
   groundTruth: GroundTruthFile,
@@ -88,20 +86,43 @@ export const falseNegatives = (
   const gtDuplicates = groundTruth.parsed.duplicates;
   const aspmFindings = aspmResults.parsed.results;
 
+  const ruleIdToCve = (ruleId?: string) => ruleId?.match(/CVE-\d{4}-\d+/)?.[0];
+
   // Go over each group of duplicates in the ground truth
   for (const duplicateGroup of gtDuplicates) {
-    // Check how many findings from this group are present in the ASPM results
-    const foundCount = duplicateGroup.reduce((count, gtFinding) => {
-      const found = aspmFindings.some(
-        (aspmFinding) =>
+    // track which ASPM finding indices have been matched for THIS group
+    const matchedIndices = new Set<number>();
+
+    // Count how many UNIQUE ASPM findings correspond to members of this duplicate group
+    let uniqueMatches = 0;
+
+    for (const gtFinding of duplicateGroup) {
+      const cve = ruleIdToCve(gtFinding.ruleId);
+
+      const idx = aspmFindings.findIndex((aspmFinding, i) => {
+        if (matchedIndices.has(i)) return false; // already matched for this group
+        // use the same matching heuristic you used elsewhere
+        if (cve) {
+          if (aspmFinding.vulnName === cve) {
+            return true;
+          }
+          return false;
+        }
+        // fallback matching by vulnPath & vulnName if available
+        return (
           aspmFinding.vulnPath === gtFinding.vulnPath &&
           aspmFinding.vulnName === gtFinding.vulnName
-      );
-      return found ? count + 1 : count;
-    }, 0);
+        );
+      });
 
-    // If more than one finding is found from this group, it means some duplicates were missed
-    if (foundCount > 1) {
+      if (idx > -1) {
+        matchedIndices.add(idx);
+        uniqueMatches += 1;
+      }
+    }
+
+    // If more than one UNIQUE matching finding is present, it's a false negative for that group
+    if (uniqueMatches > 1) {
       fnCount += 1;
     }
   }
@@ -115,8 +136,6 @@ export const falseNegatives = (
 export function precision(tp: number, fp: number) {
   if (tp + fp === 0) return 0;
 
-  console.log("TP:", tp, "FP:", fp);
-
   return tp / (tp + fp);
 }
 
@@ -126,8 +145,6 @@ export function precision(tp: number, fp: number) {
 export function recall(tp: number, fn: number) {
   if (tp + fn === 0) return 0;
 
-  console.log("TP:", tp, "FN:", fn);
-
   return tp / (tp + fn);
 }
 
@@ -136,8 +153,6 @@ export function recall(tp: number, fn: number) {
  **/
 export function f1Score(precision: number, recall: number) {
   if (precision + recall === 0) return 0;
-
-  console.log("Precision:", precision, "Recall:", recall);
 
   return (2 * precision * recall) / (precision + recall);
 }
