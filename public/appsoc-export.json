@@ -1,0 +1,28 @@
+{
+  "currentPage": 0,
+  "totalPages": 1,
+  "totalItems": 3,
+  "data": [
+    {
+      "id": "appsoc-export-1",
+      "name": "This is an example warning message.",
+      "sourceFiles": [{ "path": "src/example/file1.js", "line": "10" }]
+    },
+    {
+      "id": "appsoc-export-2",
+      "name": "This is an example warning message.",
+      "sourceFiles": [{ "path": "src/example/file1.js", "line": "10" }]
+    },
+    {
+      "id": "appsoc-export-3",
+      "name": "This is an example error message.",
+      "sourceFiles": [{ "path": "src/example/file2.js", "line": "20" }]
+    },
+    {
+      "id": "appsoc-export-4",
+      "name": "This is an example informational message.",
+      "sourceFiles": [{ "path": "src/example/file3.js", "line": "30" }],
+      "duplicates": 1
+    }
+  ]
+}

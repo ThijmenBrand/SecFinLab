@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import FileUploadBox from "./components/FileUploadBox";
 import { ClearCache, LoadFromCache, persist } from "./lib/cache";
 import type {
@@ -6,7 +6,14 @@ import type {
   GroundTruthFile,
   UploadedFileRaw,
 } from "./lib/types/uploadTypes";
-import { f1Score, precision, recall } from "./lib/metrics";
+import {
+  f1Score,
+  falseNegatives,
+  falsePositives,
+  precision,
+  recall,
+  truePositives,
+} from "./lib/metrics";
 import { parseAppSoc } from "./lib/parsers/parseAppSoc";
 
 const GROUND_TRUTH_STORAGE_KEY = "secfinlab.duplicateGroundTruth.v1";
@@ -18,6 +25,7 @@ export default function DeduplicationEvaluator() {
 
   const onFilesUploaded = useCallback((file: UploadedFileRaw) => {
     const aspmFile = parseAppSoc(file.text!);
+    console.log("Parsed ASPM Result:", aspmFile);
     setAspmFile(aspmFile);
     persist(ASPM_RESULT_STORAGE_KEY, aspmFile);
   }, []);
@@ -26,6 +34,21 @@ export default function DeduplicationEvaluator() {
     setGroundTruth(null);
     ClearCache(GROUND_TRUTH_STORAGE_KEY);
   };
+
+  const metrics = useMemo(() => {
+    if (!aspmFile || !groundTruth) return null;
+    const tp = truePositives(groundTruth, aspmFile);
+    const fp = falsePositives(groundTruth, aspmFile);
+    const fn = falseNegatives(groundTruth, aspmFile);
+    return {
+      truePositives: tp,
+      falsePositives: fp,
+      falseNegatives: fn,
+      precision: precision(tp, fp),
+      recall: recall(tp, fn),
+      f1Score: f1Score(precision(tp, fp), recall(tp, fn)),
+    };
+  }, [aspmFile, groundTruth]);
 
   useEffect(() => {
     let mounted = true;
@@ -83,6 +106,9 @@ export default function DeduplicationEvaluator() {
           <div className="mb-4 p-4 border border-gray-300 rounded bg-white shadow-sm">
             <div className="font-medium mb-2">Uploaded File:</div>
             <div className="text-gray-700">{aspmFile.name}</div>
+            <div className="text-gray-600 text-sm">
+              {aspmFile.parsed.results.length} findings
+            </div>
             <button
               className="mt-3 bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded"
               onClick={() => setAspmFile(null)}
@@ -100,6 +126,10 @@ export default function DeduplicationEvaluator() {
           <div className="mb-4 p-4 border border-gray-300 rounded bg-white shadow-sm">
             <div className="font-medium mb-2">Loaded Ground Truth:</div>
             <div className="text-gray-700">{groundTruth.name}</div>
+            <div className="text-gray-600 text-sm">
+              {groundTruth.parsed.generic.length} generic findigs,{" "}
+              {groundTruth.parsed.duplicates.length} duplicate groups
+            </div>
             <button
               className="mt-3 bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded"
               onClick={removeGroundTruth}
@@ -122,7 +152,19 @@ export default function DeduplicationEvaluator() {
         ) : (
           <div className="p-4 border border-gray-300 rounded bg-white shadow-sm">
             {/* Evaluation logic and results would go here */}
-            <div className="text-gray-700">
+            <div className="flex flex-row justify-between w-full text-gray-700">
+              <span>
+                <strong>True Positives:</strong> {metrics?.truePositives}
+              </span>
+              <span>
+                <strong>False Positives:</strong> {metrics?.falsePositives}
+              </span>
+              <span>
+                <strong>False Negatives:</strong> {metrics?.falseNegatives}
+              </span>
+            </div>
+
+            <div className="mt-4">
               <table className="w-full table-auto border-collapse">
                 <thead>
                   <tr>
@@ -134,21 +176,15 @@ export default function DeduplicationEvaluator() {
                   {/* Replace the following rows with actual computed metrics */}
                   <tr>
                     <td className="border px-4 py-2">Precision</td>
-                    <td className="border px-4 py-2">
-                      {Math.trunc(precision(groundTruth, aspmFile))}
-                    </td>
+                    <td className="border px-4 py-2">{metrics?.precision}</td>
                   </tr>
                   <tr>
                     <td className="border px-4 py-2">Recall</td>
-                    <td className="border px-4 py-2">
-                      {recall(groundTruth, aspmFile)}
-                    </td>
+                    <td className="border px-4 py-2">{metrics?.recall}</td>
                   </tr>
                   <tr>
                     <td className="border px-4 py-2">F1-Score</td>
-                    <td className="border px-4 py-2">
-                      {f1Score(groundTruth, aspmFile)}
-                    </td>
+                    <td className="border px-4 py-2">{metrics?.f1Score}</td>
                   </tr>
                 </tbody>
               </table>

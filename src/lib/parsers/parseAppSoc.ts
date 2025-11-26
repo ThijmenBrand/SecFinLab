@@ -15,19 +15,24 @@ type appSocFindings = {
 
 export const parseAppSoc = (text: string) => {
   const parsed: appSocFindings = JSON.parse(text);
+  console.log("AppSoc Raw Parsed Data:", parsed);
   const findings = parsed.data.map((finding) => ({
     vulnName: finding.name,
     vulnPath: finding.sourceFiles[0]?.path || "unknown-path",
     vulnLine: finding.sourceFiles[0]?.line,
   }));
 
+  console.log("AppSoc Mapped Findings:", findings);
+
   const aspmParsedFindings: AspmResultFile = {
-    id: `appsoc-aspm-${Date.now()}`,
-    name: `appsoc-aspm-${Date.now()}.json`,
+    id: `test`,
+    name: `test`,
     parsed: {
       results: findings,
     },
   };
+
+  console.log("AppSoc Parsed Findings:", aspmParsedFindings);
 
   return aspmParsedFindings;
 };

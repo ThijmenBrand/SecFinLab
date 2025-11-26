@@ -7,17 +7,19 @@ import { StoreToCache } from "../lib/cache";
 import type { UploadedSarif } from "../lib/types/uploadTypes";
 
 const GROUND_TRUTH_STORAGE_KEY = "secfinlab.duplicateGroundTruth.v1";
+const RAW_GROUND_TRUTH_STORAGE_KEY = "secfinlab.duplicateRawGroundTruth.v1";
 
 interface LabelerProps {
   files: UploadedSarif[];
+  duplicatesIn?: DuplicateType[];
 }
 
-export default function Labeler({ files }: LabelerProps) {
+export default function Labeler({ files, duplicatesIn = [] }: LabelerProps) {
   const [currentComparisonIndex] = useState(0);
   const [currentComparisonVulnIndex, setCurrentComparisonVulnIndex] =
     useState(0);
   const [currentSourceVulnIndex, setCurrentSourceVulnIndex] = useState(0);
-  const [duplicates, setDuplicates] = useState<DuplicateType[]>([]);
+  const [duplicates, setDuplicates] = useState<DuplicateType[]>(duplicatesIn);
   const sourceFile = files[0] ?? null;
   const comparisonFiles = files.slice(1);
   const currentComparisonFile = comparisonFiles[currentComparisonIndex] ?? null;
@@ -76,13 +78,45 @@ export default function Labeler({ files }: LabelerProps) {
     );
   };
 
+  const removeDuplicate = (
+    sourceFileId: string,
+    sourceVulnIndex: number,
+    comparisonFileId: string,
+    comparisonVulnIndex: number
+  ) => {
+    setDuplicates((prev) =>
+      prev.filter(
+        (dup) =>
+          !(
+            dup.sourceFileId === sourceFileId &&
+            dup.sourceVulnIndex === sourceVulnIndex &&
+            dup.duplicateFileId === comparisonFileId &&
+            dup.duplicateVulnIndex === comparisonVulnIndex
+          )
+      )
+    );
+  };
+
   const exportTruth = async () => {
     const data = exportGroundTruth(duplicates, files);
     exportJsonFile("ground_truth.json", data);
     try {
       await StoreToCache(GROUND_TRUTH_STORAGE_KEY, data);
+      await StoreToCache(RAW_GROUND_TRUTH_STORAGE_KEY, duplicates);
     } catch (err) {
       console.warn("Error storing ground truth to cache:", err);
+    }
+  };
+
+  const saveTruth = async () => {
+    const data = exportGroundTruth(duplicates, files);
+    try {
+      await StoreToCache(GROUND_TRUTH_STORAGE_KEY, data);
+      await StoreToCache(RAW_GROUND_TRUTH_STORAGE_KEY, duplicates);
+    } catch (err) {
+      console.warn("Error storing ground truth to cache:", err);
+    } finally {
+      alert("Ground truth saved to cache.");
     }
   };
 
@@ -103,7 +137,15 @@ export default function Labeler({ files }: LabelerProps) {
               exportTruth();
             }}
           >
-            Export ground truth
+            Export
+          </button>
+          <button
+            className="bg-green-500 hover:bg-green-300 text-white py-1 px-3 rounded mb-4 ml-2 cursor-pointer"
+            onClick={() => {
+              saveTruth();
+            }}
+          >
+            Save
           </button>
         </span>
       </div>
@@ -116,9 +158,24 @@ export default function Labeler({ files }: LabelerProps) {
             currentComparisonFile?.id ?? "",
             currentComparisonVulnIndex
           ) ? (
-            <span className="text-green-600 font-medium">
-              This combination is marked as duplicate.
-            </span>
+            <div>
+              <span className="text-green-600 font-medium">
+                This combination is marked as duplicate.
+              </span>
+              <button
+                className="bg-red-500 hover:bg-red-300 text-white py-1 px-3 rounded ml-4 cursor-pointer"
+                onClick={() =>
+                  removeDuplicate(
+                    sourceFile?.id ?? "",
+                    currentSourceVulnIndex,
+                    currentComparisonFile?.id ?? "",
+                    currentComparisonVulnIndex
+                  )
+                }
+              >
+                Remove duplicate mark
+              </button>
+            </div>
           ) : (
             <button
               className="bg-blue-500 hover:bg-blue-300 text-white py-1 px-3 rounded mb-4 cursor-pointer"

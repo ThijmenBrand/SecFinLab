@@ -1,0 +1,97 @@
+{
+  "version": "2.1.0",
+  "$schema": "http://json.schemastore.org/sarif-2.1.0-rtm.4",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "ExampleTool",
+          "informationUri": "https://example.com/tool",
+          "rules": []
+        }
+      },
+      "results": [
+        {
+          "ruleId": "EXMPL001",
+          "level": "warning",
+          "message": {
+            "text": "This is an example warning message."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/example/file1.js"
+                },
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 5
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "EXMPL002",
+          "level": "error",
+          "message": {
+            "text": "This is an example error message."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/example/file2.js"
+                },
+                "region": {
+                  "startLine": 20,
+                  "startColumn": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "EXMPL003",
+          "level": "info",
+          "message": {
+            "text": "This is an example informational message."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/example/file3.js"
+                },
+                "region": {
+                  "startLine": 30,
+                  "startColumn": 25
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "EXMPL004",
+          "level": "warning",
+          "message": {
+            "text": "This is another example warning message."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/example/file4.js"
+                },
+                "region": {
+                  "startLine": 40,
+                  "startColumn": 35
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

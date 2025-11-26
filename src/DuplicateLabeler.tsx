@@ -6,12 +6,15 @@ import { ClearCache, LoadFromCache, persist } from "./lib/cache";
 import Labeler from "./components/Labeler";
 import type { UploadedSarif } from "./lib/types/uploadTypes";
 import { parseSarif } from "./lib/parsers/parseSarif";
+import type { DuplicateType } from "./lib/types/duplicate";
 
 const STORAGE_KEY = "secfinlab.sarifFiles.v1";
+const RAW_GROUND_TRUTH_STORAGE_KEY = "secfinlab.duplicateRawGroundTruth.v1";
 
 export default function DuplicateLabeler() {
   const [files, setFiles] = useState<UploadedSarif[]>([]);
   const [labelingMode, setLabelingMode] = useState(false);
+  const [duplicates, setDuplicates] = useState<DuplicateType[]>([]);
 
   const startLabeling = () => {
     if (files.length < 2) {
@@ -19,6 +22,21 @@ export default function DuplicateLabeler() {
       alert("Upload at least two SARIF files to start labeling.");
       return;
     }
+    setLabelingMode(true);
+  };
+
+  const resumeLabelingFromCache = async () => {
+    if (files.length < 2) {
+      // require at least two files to compare side-by-side
+      alert("Upload at least two SARIF files to start labeling.");
+      return;
+    }
+
+    const duplicatesFromCache = await LoadFromCache<DuplicateType[]>(
+      RAW_GROUND_TRUTH_STORAGE_KEY
+    );
+
+    setDuplicates(duplicatesFromCache || []);
     setLabelingMode(true);
   };
 
@@ -120,15 +138,23 @@ export default function DuplicateLabeler() {
       </div>
 
       {!labelingMode && (
-        <button
-          className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
-          onClick={startLabeling}
-        >
-          Start Labeling Duplicates
-        </button>
+        <div>
+          <button
+            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
+            onClick={startLabeling}
+          >
+            Start Labeling Duplicates
+          </button>
+          <button
+            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded ml-4"
+            onClick={resumeLabelingFromCache}
+          >
+            Resume labeling from cache
+          </button>
+        </div>
       )}
 
-      {labelingMode && <Labeler files={files} />}
+      {labelingMode && <Labeler files={files} duplicatesIn={duplicates} />}
     </div>
   );
 }
