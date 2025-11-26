@@ -97,7 +97,14 @@ export default function FileMatchMode({
                     {matchingFindings[0].fileName}
                   </span>
                 </p>
-                <p>{matchingFindings[0].finding.vulnName}</p>
+                <p>
+                  RuleId
+                  <span className="font-bold">
+                    {" "}
+                    {matchingFindings[0].finding.ruleId}
+                  </span>
+                </p>
+                <p className="mt-4">{matchingFindings[0].finding.vulnName}</p>
               </div>
               {matchingFindings.length < 2 ? (
                 <div>
@@ -114,7 +121,14 @@ export default function FileMatchMode({
                       {matchingFindings[1].fileName}
                     </span>
                   </p>
-                  <p>{matchingFindings[1].finding.vulnName}</p>
+                  <p>
+                    RuleId
+                    <span className="font-bold">
+                      {" "}
+                      {matchingFindings[1].finding.ruleId}
+                    </span>
+                  </p>
+                  <p className="mt-4">{matchingFindings[1].finding.vulnName}</p>
                 </div>
               )}
             </div>
