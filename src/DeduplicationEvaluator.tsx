@@ -14,7 +14,7 @@ import {
   recall,
   truePositives,
 } from "./lib/metrics";
-import { parseAppSoc } from "./lib/parsers/parseAppSoc";
+import { parseAspmResults } from "./lib/parsers/baseAspmParser";
 
 const GROUND_TRUTH_STORAGE_KEY = "secfinlab.duplicateGroundTruth.v1";
 const ASPM_RESULT_STORAGE_KEY = "secfinlab.aspmResult.v1";
@@ -24,7 +24,7 @@ export default function DeduplicationEvaluator() {
   const [groundTruth, setGroundTruth] = useState<GroundTruthFile | null>(null);
 
   const onFilesUploaded = useCallback((file: UploadedFileRaw) => {
-    const aspmFile = parseAppSoc(file.text!);
+    const aspmFile = parseAspmResults(file.name, file.text!);
     console.log("Parsed ASPM Result:", aspmFile);
     setAspmFile(aspmFile);
     persist(ASPM_RESULT_STORAGE_KEY, aspmFile);

@@ -3,11 +3,5 @@ export type VulnerabilityPreview = {
   ruleId?: string;
   message?: string;
   uri?: string;
-  region?: {
-    startLine?: number;
-    endLine?: number;
-    startColumn?: number;
-    endColumn?: number;
-  };
-  raw?: any;
+  line?: string;
 } | null;

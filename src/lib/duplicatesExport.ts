@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { DuplicateType } from "./types/duplicate";
 import type {
   Finding,
@@ -13,55 +12,40 @@ export function exportGroundTruth(
   // Get the duplicates from the findings files. Every duplicate group is an array of findings.
   const duplicateGroups: Finding[][] = duplicates.map((dup) => {
     // For a duplicate, get the finding details from the corresponding findings file
-    console.log(findingFiles, dup);
     const sourceFile = findingFiles.find((f) => f.id === dup.sourceFileId);
-    const finding = sourceFile?.parsed.runs[0].results[dup.sourceVulnIndex];
+    if (!sourceFile || !sourceFile.parsed) {
+      throw new Error("Source file not found for duplicate");
+    }
+
+    const finding = sourceFile.parsed[dup.sourceVulnIndex];
     const dupeFile = findingFiles.find((f) => f.id === dup.duplicateFileId);
-    const dupeFinding =
-      dupeFile?.parsed.runs[0].results[dup.duplicateVulnIndex];
+    if (!dupeFile || !dupeFile.parsed) {
+      throw new Error("Duplicate file not found for duplicate");
+    }
+
+    const dupeFinding = dupeFile.parsed[dup.duplicateVulnIndex];
 
     if (!finding || !dupeFinding) {
       throw new Error("Finding not found for duplicate");
     }
 
-    return [
-      {
-        vulnPath: finding.locations[0].physicalLocation.artifactLocation.uri,
-        vulnLine: finding.locations[0].physicalLocation.region.startLine,
-        vulnName: finding.message.text,
-      },
-      {
-        vulnPath:
-          dupeFinding.locations[0].physicalLocation.artifactLocation.uri,
-        vulnLine: dupeFinding.locations[0].physicalLocation.region.startLine,
-        vulnName: dupeFinding.message.text,
-      },
-    ];
+    return [finding, dupeFinding];
   });
 
   const genericFindings: Finding[] = [];
   // Collect all findings that were not marked as duplicates
-  console.log("Finding files:", findingFiles);
   findingFiles.forEach((file) => {
-    file.parsed.runs[0].results.forEach((finding: any) => {
-      console.log("Checking finding:", finding);
+    file.parsed?.forEach((finding: Finding) => {
       const isInDuplicates = duplicateGroups.some((group) =>
         group.some(
           (f) =>
-            f.vulnPath ===
-              finding.locations[0].physicalLocation.artifactLocation.uri &&
-            f.vulnLine ===
-              finding.locations[0].physicalLocation.region.startLine &&
-            f.vulnName === finding.message.text
+            f.vulnPath === finding.vulnPath &&
+            f.vulnLine === finding.vulnLine &&
+            f.vulnName === finding.vulnName
         )
       );
-      console.log(finding.locations[0].physicalLocation);
       if (!isInDuplicates) {
-        genericFindings.push({
-          vulnPath: finding.locations[0].physicalLocation.artifactLocation.uri,
-          vulnLine: finding.locations[0].physicalLocation.region.startLine,
-          vulnName: finding.message.text,
-        });
+        genericFindings.push(finding);
       }
     });
   });

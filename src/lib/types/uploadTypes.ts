@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export type UploadedSarif = {
   id: string;
   name: string;
   size: number;
   text?: string;
-  parsed?: any;
+  parsed?: Finding[];
   findingsCount?: number;
   error?: string;
 };
@@ -19,6 +18,7 @@ export type UploadedFileRaw = {
 };
 
 export type Finding = {
+  ruleId: string;
   vulnPath: string;
   vulnLine: string;
   vulnName: string;
@@ -36,6 +36,7 @@ export type GroundTruthFile = {
 export type AspmResultFile = {
   id: string;
   name: string;
+  parser: string;
   parsed: {
     results: Finding[];
   };

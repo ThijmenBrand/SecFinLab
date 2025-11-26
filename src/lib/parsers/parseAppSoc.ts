@@ -1,4 +1,4 @@
-import type { AspmResultFile } from "../types/uploadTypes";
+import type { AspmResultFile, Finding } from "../types/uploadTypes";
 
 type appSocFindings = {
   data: {
@@ -13,26 +13,24 @@ type appSocFindings = {
   }[];
 };
 
-export const parseAppSoc = (text: string) => {
+export const parseAppSoc = (fileName: string, text: string): AspmResultFile => {
   const parsed: appSocFindings = JSON.parse(text);
   console.log("AppSoc Raw Parsed Data:", parsed);
-  const findings = parsed.data.map((finding) => ({
+  const findings: Finding[] = parsed.data.map((finding) => ({
+    ruleId: "unknown-rule-id",
     vulnName: finding.name,
     vulnPath: finding.sourceFiles[0]?.path || "unknown-path",
     vulnLine: finding.sourceFiles[0]?.line,
   }));
 
-  console.log("AppSoc Mapped Findings:", findings);
-
   const aspmParsedFindings: AspmResultFile = {
-    id: `test`,
-    name: `test`,
+    id: `aspm-result-${Date.now()}`,
+    parser: "AppSoc",
+    name: fileName,
     parsed: {
       results: findings,
     },
   };
-
-  console.log("AppSoc Parsed Findings:", aspmParsedFindings);
 
   return aspmParsedFindings;
 };

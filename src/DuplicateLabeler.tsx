@@ -154,7 +154,7 @@ export default function DuplicateLabeler() {
         </div>
       )}
 
-      {labelingMode && <Labeler files={files} duplicatesIn={duplicates} />}
+      {labelingMode && <Labeler filesIn={files} duplicatesIn={duplicates} />}
     </div>
   );
 }
