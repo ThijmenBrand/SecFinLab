@@ -8,6 +8,15 @@ export type UploadedSarif = {
   error?: string;
 };
 
+export type UploadedJson = {
+  id: string;
+  name: string;
+  size: number;
+  text?: string;
+  parsed?: unknown;
+  error?: string;
+};
+
 export type UploadedFileRaw = {
   id: string;
   name: string;

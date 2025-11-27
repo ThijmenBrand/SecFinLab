@@ -1,6 +1,7 @@
 import { NavLink, Route, Routes } from "react-router-dom";
 import DuplicateLabeler from "./DuplicateLabeler";
 import DeduplicationEvaluator from "./DeduplicationEvaluator";
+import FieldStripper from "./FieldStripper";
 
 function App() {
   return (
@@ -26,6 +27,14 @@ function App() {
                 >
                   Deduplication Evaluator
                 </NavLink>
+                <NavLink
+                  to="/field-stripper"
+                  className={({ isActive }) =>
+                    isActive ? "text-blue-600 font-semibold" : "text-gray-700"
+                  }
+                >
+                  Field Stripper
+                </NavLink>
               </div>
             </div>
           </div>
@@ -38,6 +47,7 @@ function App() {
               path="/dedup-evaluate"
               element={<DeduplicationEvaluator />}
             />
+            <Route path="/field-stripper" element={<FieldStripper />} />
           </Routes>
         </main>
       </div>
