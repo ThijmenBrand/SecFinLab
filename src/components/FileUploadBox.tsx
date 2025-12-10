@@ -101,7 +101,7 @@ export default function FileUploadBox({
       <label className="inline-block">
         <input
           type="file"
-          accept=".sarif,application/json,.json"
+          accept=".sarif,application/json,.json,.text/plain,.csv"
           multiple={multiple}
           onChange={onInputChange}
           className="hidden"

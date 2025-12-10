@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { DuplicateType } from "../lib/types/duplicate";
 import type { UploadedSarif } from "../lib/types/uploadTypes";
 import type { FindingInMatchingCVE } from "../lib/types/matchingFindings";
+import { getCve } from "../lib/getCve";
 
 interface FileMatchModeProps {
   files: UploadedSarif[];
@@ -48,10 +49,7 @@ export default function FileMatchMode({
           const otherFile = files[i];
           const match = otherFile.parsed?.find((otherFinding) => {
             //  remove anything but the CVE ID for better matching. cve is constructed of CVE-XXXX-XXXX, and the last part can be variable in length
-            return (
-              otherFinding.ruleId.match(/CVE-\d{4}-\d+/)?.[0] ===
-              finding.ruleId.match(/CVE-\d{4}-\d+/)?.[0]
-            );
+            return getCve(otherFinding.ruleId) === getCve(finding.ruleId);
           });
 
           if (match) {

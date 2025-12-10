@@ -54,6 +54,7 @@ export default function FieldStripper() {
       const json =
         typeof data === "string" ? data : JSON.stringify(data, null, 2);
       const picker = (window as any).showSaveFilePicker;
+      console.log(picker);
       if (picker) {
         try {
           const handle = await picker({

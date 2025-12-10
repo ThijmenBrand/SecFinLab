@@ -15,6 +15,7 @@ import {
   truePositives,
 } from "./lib/metrics";
 import { parseAspmResults } from "./lib/parsers/baseAspmParser";
+import { parseGroundTruth } from "./lib/parsers/parseGroundTruth";
 
 const GROUND_TRUTH_STORAGE_KEY = "secfinlab.duplicateGroundTruth.v1";
 const ASPM_RESULT_STORAGE_KEY = "secfinlab.aspmResult.v1";
@@ -27,6 +28,16 @@ export default function DeduplicationEvaluator() {
     const aspmFile = parseAspmResults(file.name, file.text!);
     setAspmFile(aspmFile);
     persist(ASPM_RESULT_STORAGE_KEY, aspmFile);
+  }, []);
+
+  const onGroundTruthUploaded = useCallback((file: UploadedFileRaw) => {
+    try {
+      const groundTruthFile = parseGroundTruth(file.name, file.text!);
+      setGroundTruth(groundTruthFile);
+      persist(GROUND_TRUTH_STORAGE_KEY, groundTruthFile);
+    } catch (err) {
+      console.error("Failed to parse ground truth file", err);
+    }
   }, []);
 
   const removeGroundTruth = () => {
@@ -137,7 +148,10 @@ export default function DeduplicationEvaluator() {
             </button>
           </div>
         ) : (
-          <div className="text-gray-600">No ground truth file loaded.</div>
+          <FileUploadBox
+            onFileUploaded={onGroundTruthUploaded}
+            multiple={false}
+          />
         )}
       </div>
 

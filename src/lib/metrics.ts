@@ -14,6 +14,9 @@ export const truePositives = (
   const gtDuplicates = groundTruth.parsed.duplicates;
   const aspmFindings = aspmResults.parsed.results;
 
+  console.log("GT Duplicates:", gtDuplicates);
+  console.log("ASPM Findings:", aspmFindings);
+
   // track which ASPM finding indicies have already been matched to avoid double counting
   const usedIndices = new Set<number>();
 

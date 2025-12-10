@@ -1,6 +1,7 @@
 import type { AspmParser } from "../types/aspmParser";
 import type { AspmResultFile } from "../types/uploadTypes";
 import { parseAppSoc } from "./parseAppSoc";
+import { parseKondukto } from "./parseKondukto";
 
 export const parseAspmResults = (
   fileName: string,
@@ -19,6 +20,11 @@ const determineAspmParser = (fileName: string): AspmParser => {
       return {
         name: "AppSoc",
         parse: parseAppSoc,
+      };
+    case "kondukto":
+      return {
+        name: "Kondukto",
+        parse: parseKondukto,
       };
     // Future ASPM parsers can be added here
     default:
